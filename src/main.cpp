@@ -77,7 +77,7 @@ int main() {
           std::cout << "epsi: " << epsi << std::endl;
 
           VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          state << 1, 0, 0, v, cte, epsi;
           std::cout << "STATE: " << state.format(singleLineFormat) << std::endl;
           
           std::vector<std::tuple<double, double>> predicted_path;

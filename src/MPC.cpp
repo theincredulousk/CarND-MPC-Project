@@ -11,7 +11,7 @@ using Eigen::VectorXd;
 
 // Samples to consider, larger numbers produce control oscillation
 //size_t N = 6;
-size_t N = 7;
+size_t N = 6;
 
 // 100ms, value seems to work best when near actuator delay?
 //double dt = 0.01;
@@ -82,27 +82,29 @@ class FG_eval {
     } */
 
          for (unsigned int t = 0; t < N; t++) {
-      fg[0] += (10.0 / (t+1)) * 10 * CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += (100.0 / (t+1)) * 20 * CppAD::pow(vars[epsi_start + t], 2);
+      //fg[0] += (10.0 / (t+1)) * 15 * CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += ((t+1) / 0.2) * 15 * CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += (60.0 / (t+1)) * 40 * CppAD::pow(vars[epsi_start + t], 2);
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
       //    std::cout << "cte + t <<" << vars[cte_start + t] << std::endl;
     //std::cout << "epsi_start + t <<" << vars[epsi_start + t] << std::endl;
     }
 
-
+/*
      // Minimize the use of actuators
     for (unsigned int t = 0; t < N - 1; t++) {
       fg[0] += (10.0 / (t+1)) * 1 * CppAD::pow(vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t], 2);
           std::cout << "delta_start + t <<" << vars[delta_start + t] << std::endl;
     std::cout << "a_start + t <<" << vars[a_start + t] << std::endl;
-    }
+    }*/
 
 
 
      // Minimize the value gap between sequential actuations.
     for (unsigned int t = 0; t < N - 2; t++) {
-      fg[0] += (100.0 / (t+1)) * 100 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += (300.0 / (t+1)) * 400 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      //fg[0] += 20000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
           std::cout << "delta_start diff + t <<" << vars[delta_start + t + 1] - vars[delta_start + t] << std::endl;
     std::cout << "a_start diff <<" << vars[a_start + t + 1] - vars[a_start + t] << std::endl;
@@ -228,8 +230,8 @@ std::vector<double> MPC::Solve(const VectorXd &state, const VectorXd &coeffs, st
   for (unsigned int i = delta_start; i < a_start; ++i) {
     //vars_lowerbound[i] = -0.436332;
     //vars_upperbound[i] = 0.436332;
-    vars_lowerbound[i] = -0.3236;
-    vars_upperbound[i] = 0.3236;
+    vars_lowerbound[i] = -0.15;//1236;
+    vars_upperbound[i] = 0.15; //1236;
   }
 
   // Acceleration Limits
