@@ -48,29 +48,60 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
-          /**
-           * TODO: Calculate steering angle and throttle using MPC.
-           * Both are in between [-1, 1].
-           */
           double steer_value;
           double throttle_value;
 
+          // Convert vectors to Eigen::VectorXd
+          int n_points = ptsx.size();
+          VectorXd pointsX(n_points);
+          pointsX.fill(0.0);
+          
+          VectorXd pointsY(n_points);
+          pointsX.fill(0.0);
+
+          for (unsigned int i = 0; i < ptsx.size(); i++) {
+            double xdiff = ptsx[i] - px;
+            double ydiff = ptsy[i] - py;
+
+            pointsX[i] = xdiff * cos(-psi) - ydiff * sin(-psi);
+            pointsY[i] = xdiff * sin(-psi) + ydiff * cos(-psi);
+          }
+
+          auto coeffs = polyfit(pointsX, pointsY, 3); 
+          std::cout << "coeffs: " << coeffs.format(singleLineFormat) << std::endl;
+          
+          double cte = polyeval(coeffs, 0);
+          std::cout << "cte: " << cte << std::endl;
+          
+          double epsi = -atan(coeffs[1]);
+          std::cout << "epsi: " << epsi << std::endl;
+
+          VectorXd state(6);
+          state << 0, 0, 0, v, cte, epsi;
+          std::cout << "STATE: " << state.format(singleLineFormat) << std::endl;
+          
+          std::vector<std::tuple<double, double>> predicted_path;
+          auto vars = mpc.Solve(state, coeffs, predicted_path);
+          VectorXd varsXd(8);
+          for(int idx = 0; idx < 8; idx++) { varsXd[idx] = vars[idx]; }
+          std::cout << "SOLVED VARS: " << varsXd.format(singleLineFormat) << std::endl;
+
+          steer_value = -1.0 * vars[6] / deg2rad(25);
+          throttle_value = vars[7];
+
           json msgJson;
-          // NOTE: Remember to divide by deg2rad(25) before you send the 
-          //   steering value back. Otherwise the values will be in between 
-          //   [-deg2rad(25), deg2rad(25] instead of [-1, 1].
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
-
+          std::cout << "STEER=" << steer_value << " THROTTLE=" << throttle_value << std::endl;
+          
           // Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
-          /**
-           * TODO: add (x,y) points to list here, points are in reference to 
-           *   the vehicle's coordinate system the points in the simulator are 
-           *   connected by a Green line
-           */
+          for (const auto& coords : predicted_path) {
+              mpc_x_vals.push_back(std::get<0>(coords));
+              mpc_y_vals.push_back(std::get<1>(coords));
+          }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -79,26 +110,22 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          /**
-           * TODO: add (x,y) points to list here, points are in reference to 
-           *   the vehicle's coordinate system the points in the simulator are 
-           *   connected by a Yellow line
-           */
+          double poly_inc = 2.0;
+          int num_points = 20;
+          
+          for (int i = 1; i < num_points; i++) {
+            next_x_vals.push_back(poly_inc * i);
+            next_y_vals.push_back(polyeval(coeffs, poly_inc * i));
+          }
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
-          // Latency
-          // The purpose is to mimic real driving conditions where
-          //   the car does actuate the commands instantly.
-          //
-          // Feel free to play around with this value but should be to drive
-          //   around the track with 100ms latency.
-          //
-          // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE SUBMITTING.
+          std::cout << std::endl << msg << std::endl;
+          
+          // Artifical Actuator Latency
           std::this_thread::sleep_for(std::chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }  // end "telemetry" if
