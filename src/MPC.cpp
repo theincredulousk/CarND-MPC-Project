@@ -41,87 +41,32 @@ class FG_eval {
   FG_eval(VectorXd coeffs) { this->coeffs = coeffs; }
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
-  void operator()(ADvector& fg, const ADvector& vars) {
+  void operator()(ADvector& fg, const ADvector& vars) 
+  {
 
-    //std::cout << "VARS FG: " << vars << std::endl;
-    /**
-     * TODO: implement MPC
-     * `fg` is a vector of the cost constraints, `vars` is a vector of variable 
-     *   values (state & actuators)
-     * NOTE: You'll probably go back and forth between this function and
-     *   the Solver function below.
-     */
-    // The cost is stored is the first element of `fg`.
-    // Any additions to the cost should be added to `fg[0]`.
     fg[0] = 0;
 
-    // Reference State Cost
-    /**
-     * TODO: Define the cost related the reference state and
-     *   anything you think may be beneficial.
-     */
-
-    // The part of the cost based on the reference state.
-    /*
-     for (unsigned int t = 0; t < N; t++) {
-      fg[0] += 2000 * CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += 2750 * CppAD::pow(vars[epsi_start + t], 2);
-      fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
-    }
-
-     // Minimize the use of actuators
-    for (unsigned int t = 0; t < N - 1; t++) {
-      fg[0] += 8000 * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += CppAD::pow(vars[a_start + t], 2);
-    }
-
-     // Minimize the value gap between sequential actuations.
-    for (unsigned int t = 0; t < N - 2; t++) {
-      fg[0] += 4000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
-    } */
-
-         for (unsigned int t = 0; t < N; t++) {
-      //fg[0] += (10.0 / (t+1)) * 15 * CppAD::pow(vars[cte_start + t], 2);
+    // Minimize cross track and steering angle error
+    // Penalize "future" cross track error over immediate cross track error (smooths trajectory)
+    // Penalize immediate steering angle error over "future" angle error (keeps steering responsive)
+    for (unsigned int t = 0; t < N; t++) 
+    {
       fg[0] += ((t+1) / 0.2) * 15 * CppAD::pow(vars[cte_start + t], 2);
       fg[0] += (60.0 / (t+1)) * 40 * CppAD::pow(vars[epsi_start + t], 2);
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
-      //    std::cout << "cte + t <<" << vars[cte_start + t] << std::endl;
-    //std::cout << "epsi_start + t <<" << vars[epsi_start + t] << std::endl;
     }
 
-/*
-     // Minimize the use of actuators
-    for (unsigned int t = 0; t < N - 1; t++) {
-      fg[0] += (10.0 / (t+1)) * 1 * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += CppAD::pow(vars[a_start + t], 2);
-          std::cout << "delta_start + t <<" << vars[delta_start + t] << std::endl;
-    std::cout << "a_start + t <<" << vars[a_start + t] << std::endl;
-    }*/
-
-
-
-     // Minimize the value gap between sequential actuations.
-    for (unsigned int t = 0; t < N - 2; t++) {
+    // Minimize the value gap between sequential actuations.
+    // Penalize "future" gaps over immediate gaps (smooths trajectory)
+    for (unsigned int t = 0; t < N - 2; t++) 
+    {
       fg[0] += (300.0 / (t+1)) * 400 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      //fg[0] += 20000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
-          std::cout << "delta_start diff + t <<" << vars[delta_start + t + 1] - vars[delta_start + t] << std::endl;
-    std::cout << "a_start diff <<" << vars[a_start + t + 1] - vars[a_start + t] << std::endl;
     } 
-
-
 
     //
     // Setup Constraints
     //
-    // NOTE: In this section you'll setup the model constraints.
-
-    // Initial constraints
-    //
-    // We add 1 to each of the starting indices due to cost being located at
-    // index 0 of `fg`.
-    // This bumps up the position of all the other values.
     fg[1 + x_start] = vars[x_start];
     fg[1 + y_start] = vars[y_start];
     fg[1 + psi_start] = vars[psi_start];
@@ -130,7 +75,8 @@ class FG_eval {
     fg[1 + epsi_start] = vars[epsi_start];
 
     // The rest of the constraints
-    for (unsigned int t = 1; t < N; ++t) {
+    for (unsigned int t = 1; t < N; ++t) 
+    {
        // The state at time t+1 .
       AD<double> x1 = vars[x_start + t];
       AD<double> y1 = vars[y_start + t];
@@ -172,9 +118,7 @@ class FG_eval {
 
       // epsi[t] = psi[t] - psides[t-1] + v[t-1] * delta[t-1] / Lf * dt
       fg[1 + epsi_start + t] =
-          epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
-
-    
+          epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);    
     }
   }
 };
@@ -228,8 +172,9 @@ std::vector<double> MPC::Solve(const VectorXd &state, const VectorXd &coeffs, st
 
   // Steering Limits
   for (unsigned int i = delta_start; i < a_start; ++i) {
-    //vars_lowerbound[i] = -0.436332;
-    //vars_upperbound[i] = 0.436332;
+    // Artifically limit steeting range available.  
+    // This forces the model to pick smoother trajectories.
+    // Also helps prevent oscillation, "jerky" steering, and overcorrection in sharp corners.
     vars_lowerbound[i] = -0.15;//1236;
     vars_upperbound[i] = 0.15; //1236;
   }

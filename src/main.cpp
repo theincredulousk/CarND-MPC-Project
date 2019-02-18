@@ -59,7 +59,8 @@ int main() {
           VectorXd pointsY(n_points);
           pointsX.fill(0.0);
 
-          for (unsigned int i = 0; i < ptsx.size(); i++) {
+          for (unsigned int i = 0; i < ptsx.size(); i++) 
+          {
             double xdiff = ptsx[i] - px;
             double ydiff = ptsy[i] - py;
 
