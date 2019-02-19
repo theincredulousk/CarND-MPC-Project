@@ -80,6 +80,7 @@ The model is able to successfully manuver the track with a target speed of 80mph
 ## Basic Build Instructions
 
 1. Clone this repo.
+2. Extract Ipopt-3.12.7.tar.gz to the same directory (located in the project root), or have ipopt installed elsewhere.
 2. Make a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./mpc`.
