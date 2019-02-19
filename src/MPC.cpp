@@ -9,12 +9,11 @@
 using CppAD::AD;
 using Eigen::VectorXd;
 
-// Samples to consider, larger numbers produce control oscillation
-//size_t N = 6;
+// Samples to consider
+// Notes: larger numbers seem to produce control oscillation, lower numbers cause complete failure to control vehicle.
 size_t N = 6;
 
 // 100ms, value seems to work best when near actuator delay?
-//double dt = 0.01;
 double dt = 0.1;
 
 size_t x_start = 0;
@@ -31,7 +30,7 @@ size_t a_start = delta_start + N - 1;
 const double Lf = 2.67;
 
 // Target average speed
-double ref_v = 100;
+double ref_v = 80;
 
 
 class FG_eval {
@@ -96,6 +95,7 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
+      // Modified from lesson exmaple for 3rd degree polynomial
       AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0,2) + coeffs[3] * CppAD::pow(x0,3);
       AD<double> psides0 = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0,2));
       
@@ -182,7 +182,7 @@ std::vector<double> MPC::Solve(const VectorXd &state, const VectorXd &coeffs, st
   // Acceleration Limits
   for (unsigned int i = a_start; i < n_vars; ++i) {
     vars_lowerbound[i] = -1.0;
-    vars_upperbound[i] = 1.0;
+    vars_upperbound[i] = 0.75;
   }
 
   // Lower and upper limits for constraints
