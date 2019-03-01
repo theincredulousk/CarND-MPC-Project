@@ -48,8 +48,8 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
-          double steer_value;
-          double throttle_value;
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
 
           // Convert vectors to Eigen::VectorXd
           int n_points = ptsx.size();
@@ -58,6 +58,8 @@ int main() {
           
           VectorXd pointsY(n_points);
           pointsX.fill(0.0);
+
+       
 
           for (unsigned int i = 0; i < ptsx.size(); i++) 
           {
@@ -78,9 +80,20 @@ int main() {
           std::cout << "epsi: " << epsi << std::endl;
 
           VectorXd state(6);
-          state << 1, 0, 0, v, cte, epsi;
-          std::cout << "STATE: " << state.format(singleLineFormat) << std::endl;
+
+          // Predict state 100ms into the future (compensate for Control Latency)
+          double latency = 0.1;   
+          psi = (v / 2.67) * -1.0 * steer_value * latency;
+          px = v * cos(-psi) * latency;
+          py = v * sin(-psi) * latency;
           
+          state << px, py, psi, v, cte, epsi;
+
+
+          // state << 1, 0, 0, v, cte, epsi;
+          
+          std::cout << "STATE: " << state.format(singleLineFormat) << std::endl;
+
           std::vector<std::tuple<double, double>> predicted_path;
           auto vars = mpc.Solve(state, coeffs, predicted_path);
           VectorXd varsXd(8);
