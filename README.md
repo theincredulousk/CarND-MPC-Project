@@ -5,7 +5,7 @@ Self-Driving Car Engineer Nanodegree Program
 This implementation of model predictive control uses a state vector consisting of:
 * absolute 2D position [x,y]
 * velocity [v]
-* steering angle [psi]
+* heading [psi]
 * cross track error [cte]
 * trajectory error [epsi]
 
