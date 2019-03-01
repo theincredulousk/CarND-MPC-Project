@@ -11,7 +11,6 @@ using Eigen::VectorXd;
 
 // Samples to consider
 // Notes: larger numbers seem to produce control oscillation, lower numbers cause complete failure to control vehicle.
-//size_t N = 6;
 size_t N = 6;
 
 // 100ms, value seems to work best when near actuator delay?
@@ -53,10 +52,6 @@ class FG_eval {
     {
       fg[0] += ((t+1) / 0.2) * 15 * CppAD::pow(vars[cte_start + t], 2);
       fg[0] += (60.0 / (t+1)) * 40 * CppAD::pow(vars[epsi_start + t], 2);
-
-      //fg[0] += 150 * CppAD::pow(vars[cte_start + t], 2);
-      //fg[0] += 400 * CppAD::pow(vars[epsi_start + t], 2);
-
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
@@ -64,7 +59,6 @@ class FG_eval {
     // Penalize "future" gaps over immediate gaps (smooths trajectory)
     for (unsigned int t = 0; t < N - 2; t++) 
     {
-      //fg[0] += 4000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += (300.0 / (t+1)) * 400 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     } 
