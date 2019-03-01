@@ -47,7 +47,7 @@ It took some experimentation to find good coefficients for the cost functions, a
 
 ### Achieved Performance
 
-The model is able to successfully manuver the track with a target speed of 80mph, within project constraints.  The model is actually capable of manuvering the track with a 100mph target, which is by far the fastest I've been able to accomplish with any control model, but unfortunately touches the curb twice which violates acceptance criteria.
+The model is able to successfully manuver the track with a target speed of 100mph, within project constraints.  The model is actually capable of manuvering the track with a 100mph target, which is by far the fastest I've been able to accomplish with any control model.  This came after adding latency compensation to the state vector.  Without latency prediction, I was only able to achieve 80mph within project constraints.
 
 ### Open Problems and Topics for Further Investigation
 
