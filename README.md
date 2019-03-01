@@ -20,7 +20,7 @@ Error values are computed at each timestep based on the reference path that is p
 
 The actuators (control variables) available to the model for control are:
 * Throttle, a [-1,1], controls the vehicle throttle/brake (amoritized into a single control) where -1 is full brake and 1 is full throttle.
-* Steering angle, sigma [-25 degrees, 25 degrees], controls the steering wheel of the car to determine heading
+* Steering angle, delta [-25 degrees, 25 degrees], controls the steering wheel of the car to determine heading
 
 Using the reference path points, a fit curve is created representing the desired trajectory over time.  The solver then takes the state, vehicle model (equations governing how varying control variables affect trajectory), specification of actuator constraints, a cost function to discourage solutions with undesirable "real world behavior", as well as a target velocity which (essentially_ gives the model a "reason" for forward progress, as cross-track error and angle error alone do not) .  The output (solution) of this process are actuation values producing a fit curve that will (hopefully!) lead to the the vehicle following the reference trajectory at the maximum manageable speed. 
 
